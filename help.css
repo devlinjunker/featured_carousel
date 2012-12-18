@@ -1,0 +1,50 @@
+/* Help Tag and Popup */
+.help{
+	border-bottom: 		1px dotted #9FBAFE; 
+	outline: 			none;
+	cursor: 			help; 
+	text-decoration: 	none;
+	position: 			relative;
+	color:				#9FBAFE;
+}
+
+.help span{
+	background: 		#9FDAEE; 
+	border: 			1px solid #2BB0D7;
+	margin-left: 		-999em;
+	position: 			absolute;
+	padding:			1em;
+}
+
+.help:hover{
+	color:				#000000;
+}
+
+.help:hover span{
+	font-family: 		Calibri, Tahoma, Geneva, sans-serif;
+	position: 			absolute;
+	left: 				1em;
+	bottom:				2em;
+	z-index: 			99;
+	margin-left: 		0;
+	width: 				250px;
+}
+
+/* Styles for the Settings Field Inputs */
+.slide_info_label{
+	width: 				6.5em;
+	float: 				left;
+}
+
+.slide_text_input{
+	width: 				30em;
+	height: 			8em;
+}
+
+.slide_title_input{
+	width:				20em;
+}
+
+.slide_url_input{
+	width: 				25em;
+}
