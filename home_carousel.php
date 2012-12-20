@@ -36,8 +36,25 @@ $home_carousel_effects = array(
 $content_locations = array(
 	'left' 			=> 'Left', 
 	'right' 		=> 'Right',
+	//'top'			=> 'Top',
+	//'bottom'		=> 'Bottom',
 	//'below' 		=> 'Below',
 	//'above' 		=> 'Above'
+);
+
+$controller_locations = array(
+	'content-top-left'	=> 'Upper Left of Content',
+	'content-top-middle'	=> 'Upper Middle of Content',
+	'content-top-right'	=> 'Upper Right of Content',
+	'content-bottom-left'	=> 'Lower Left of Content',
+	'content-bottom-middle' => 'Lower Middle of Content',
+	'content-bottom-top'	=> 'Lower Right of Content',
+	'image-top-left'	=> 'Upper Left of Image',
+	'image-top-middle'	=> 'Upper Middle of Image',
+	'image-top-right'	=> 'Upper Right of Image',
+	'image-bottom-left'	=> 'Lower Left of Image',
+	'image-bottom-middle'	=> 'Lower Middle of Image',
+	'image-bottom-right'	=> 'Lower Right of Image'
 );
 
 $image_locations = array(
@@ -87,7 +104,8 @@ $home_carousel_settings_defaults = apply_filters('home_carousel_settings_default
 	'opacity'		=> '40',
 	
 	// Controller Settings
-	'control_loc'	=> 'top_right',
+	'control_visible'=>true,
+	'control_loc'	=> 'image-top-right',
 	'slide_nums'	=> true,
 	'control_opacity'=>'100',
 	'control_color' => '000000',
@@ -130,23 +148,30 @@ $home_carousel_slides = wp_parse_args($home_carousel_slides, $home_carousel_slid
 
 
 if( is_admin() ){
-	add_action( 'admin_menu', 'add_home_carousel_menu' );
-	add_action( 'admin_init', 'register_home_carousel_settings' );
+	add_action( 'admin_menu', 'add_home_carousel_admin_menu' );
+	add_action( 'admin_init', 'register_home_carousel_settings_page' );
+
 }else{
-	add_action( 'wp_enqueue_scripts', 'register_home_carousel_files' );
-	add_action( 'wp_head', 'home_carousel_header_script' );
+	add_action( 'wp_enqueue_scripts', 'register_home_carousel_display_files' );
+	add_action( 'wp_head', 'home_carousel_display_header_script' );
 }
 
-function register_home_carousel_files(){
+function register_home_carousel_display_files(){
 	if( is_home() ){
+		// Register Files
 		wp_register_style( 'home_carousel_styles', plugins_url('carousel.css', __FILE__) );
 		wp_register_script( 'jquery_cycle', plugins_url('jquery.cycle.all.min.js', __FILE__) );
+	
+		// Add to Home Page	
 		wp_enqueue_style( 'home_carousel_styles' );
 		wp_enqueue_script( 'jquery_cycle' );
 	}
 }
 
-function home_carousel_header_script(){
+## 
+## Creates and Inserts the Javascript to Make Carousel
+##
+function home_carousel_display_header_script(){
 	global $home_carousel_settings;
 	
 	print "<script type='text/javascript'>
@@ -171,28 +196,62 @@ function home_carousel_header_script(){
 ##
 ## Adds the Home Carousel Tab to the Admin Menu
 ## 
-function add_home_carousel_menu(){
+function add_home_carousel_admin_menu(){
 	// Add Page to Menu
 	$page = add_menu_page( 'Home Carousel', 'Home Carousel', 'manage_options', 'home_carousel', 'home_carousel_menu_page', "", "40.5");
 	
-	// Add Stylesheet to Page
-	add_action( 'admin_print_styles-'.$page , 'home_carousel_options_styles'); 
+	// Add Stylesheet Hook to Page
+	add_action( 'admin_print_styles-'.$page , 'home_carousel_options_sheets');
+
+	// Add Hook for Header Script
+	//add_action( 'wp_head', 'home_carousel_options_header');
 }
 
 ##
 ## Adds Options Stylesheet to Plugin Options Page
 ##
-function home_carousel_options_styles(){
+function home_carousel_options_sheets(){
 	wp_enqueue_style('home_carousel_options_styles');
+	wp_enqueue_style('thickbox');
+	wp_enqueue_script('media_upload');
+	wp_enqueue_script('thickbox');
+	wp_enqueue_script('jquery');
+}
+
+##
+## Adds Script to top of Options Page 
+##
+function home_carousel_options_script(){
+	print "<script type='text/javascript'>
+	jQuery(document).ready(function($) {
+		$('input#image_select_button').each(function(){
+			$(this).attr('onclick', 'carousel_image_select(this)');
+		});
+	}); 
+
+	function carousel_image_select(element){
+		var slide_num = jQuery(element).attr('data-slide-num');
+		formfield = jQuery('#image_select[data-slide-num='+slide_num+']').attr('name');
+		tb_show('', 'media-upload.php?type=image&TB_iframe=true');
+			
+		window.send_to_editor = function(html){
+			var imgurl = jQuery('img', html).attr('src');
+			jQuery('#image_select[data-slide-num='+slide_num+']').val(imgurl);
+			tb_remove(); 
+		};
+
+		return false;
+	}
+	</script>";
 }
 
 ##
 ## Registers the Carousel Settings so Wordpress will handle the options page
 ##
-function register_home_carousel_settings(){
+function register_home_carousel_settings_page(){
 	global $home_carousel_settings;
 	
-	global $home_carousel_effects, $content_locations, $image_locations, $title_sizes, $title_locs;
+	global $home_carousel_effects, $content_locations, $controller_locations, $image_locations, $title_sizes, $title_locs;
 	
 	// Register Stylesheets
 	wp_register_style( 'home_carousel_options_styles', plugins_url('options.css', __FILE__) );
@@ -202,7 +261,7 @@ function register_home_carousel_settings(){
 	register_setting( 'home_carousel_settings_group', 'home_carousel_slides', 'sanatize_home_carousel_slides'); 
 	
 	
-	/*** Add Section to Configure Slides ***/
+	/*** Section to Configure Slides ***/
 	add_settings_section( 'home_carousel_slides', 'Slides', 'home_carousel_options_section', 'home_carousel' );
 	
 	// Add Field to Change Number of Slides
@@ -214,7 +273,7 @@ function register_home_carousel_settings(){
 	}
 	
 	
-	/*** Add Section to Configure Carousel Container ***/
+	/*** Section to Configure Carousel Container ***/
 	add_settings_section( 'home_carousel_container_settings', 'Container Settings', 'home_carousel_options_section', 'home_carousel' );
 	
 	// Add Container ID Field
@@ -227,7 +286,7 @@ function register_home_carousel_settings(){
 	add_settings_field ( 'height', 'Container Height', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_container_settings', array( 'setting_name' => 'height', 'max_char' => 3, 'follow' => 'pixels' ) );
 	
 	
-	/*** Add Section to Configure Content ***/
+	/*** Section to Configure Content ***/
 	add_settings_section( 'home_carousel_content_settings', 'Content Settings', 'home_carousel_options_section', 'home_carousel' );
 	
 	// Add Content Location
@@ -256,8 +315,9 @@ function register_home_carousel_settings(){
 	
 	// Add Content Opacity Field
 	add_settings_field( 'opacity', 'Content Background Opacity', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_content_settings', array( 'setting_name' => 'opacity', 'max_char' => 3, 'follow' => '%', 'help' => 'The Background Opacity Value will only be used if the content <em>overlaps</em> the image or if the content is <em>below</em> or <em>above</em> the carousel' ) );
+
 	
-	/*** Add Section to Configure Image ***/
+	/*** Section to Configure Image ***/
 	add_settings_section( 'home_carousel_image_settings', 'Image Settings', 'home_carousel_options_section', 'home_carousel' );
 	
 	// Add Image Location Field
@@ -267,11 +327,29 @@ function register_home_carousel_settings(){
 	add_settings_field( 'image_color', 'Image Background Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_image_settings', array( 'setting_name' => 'image_color', 'max_char' => 6, 'explain' => 'Color to appear behind the image' ) );
 	
 	
-	/*** Add Section to Configure Controller ***/
+	/*** Section to Configure Controller ***/
 	add_settings_section( 'home_carousel_controller_settings', 'Controller Settings', 'home_carousel_options_section', 'home_carousel' );
+
+	add_settings_field( 'control_visible', 'Controller Visible', 'home_carousel_settings_checkbox', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_visible', 'explain' => 'Check to Show Controller on Carousel' ) );
+
+	add_settings_field( 'control_loc', 'Controller Location', 'home_carousel_settings_dropdown', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_loc', 'options' => $controller_locations ) );
+
+	add_settings_field( 'slide_nums', 'Controller Slide Numbers', 'home_carousel_settings_checkbox', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'slide_nums', 'explain' => 'Check to Show Slide Numbers on Controller' ) ); 
 	
+	add_settings_field( 'control_opacity', 'Controller Background Opacity', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_opacity', 'max_char' => 3 ) );
+
+	add_settings_field( 'control_color', 'Controller Background Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_color', 'max_char' => 6 ) );
+
+	add_settings_field( 'active_color', 'Controller Active Selector Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'active_color', 'max_char' => 6 ) );
+
+	add_settings_field( 'active_text', 'Controller Active Text Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'active_text', 'max_char' => 6 ) );
+
+	add_settings_field( 'inactive_color', 'Controller Inactive Selector Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'inactive_color', 'max_char' => 6 ) );
+
+	add_settings_field( 'inactive_text', 'Controller Inactive Text Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'inactive_text', 'max_char' => 6 ) );
 	
-	/*** Add Section to Configure Transition ***/
+
+	/*** Section to Configure Transition ***/
 	add_settings_section( 'home_carousel_transition_settings', 'Transition Settings', 'home_carousel_options_section', 'home_carousel' );
 	
 	// Add Transition Effect Field
@@ -288,6 +366,9 @@ function register_home_carousel_settings(){
 ## Formats the Carousel Options Page
 ##
 function home_carousel_menu_page(){
+	//Scripts
+	home_carousel_options_script();	
+
 	// Top of Page
 	print "<div class='wrap' id='home_carousel_options_page'>
 				<h2> Home Carousel Plugin Options </h2>
@@ -396,9 +477,8 @@ function home_carousel_slide_input($args){
 		// Add Title Input
 		$input .= "<span class='slide_info_label'>Title:</span> <input class='slide_title_input' name='home_carousel_slides[$slide_num][title]' type='text' placeholder='$post_title' ".( isset($title) ? "value='$title'" : "")."/>".home_carousel_help_tag($title_help)."<br/>";
 		
-		// TODO: Make 'Select Existing Image' Link Visible Once Implemented
 		// Add Image Input
-		$input .= "<span class='slide_info_label'>Image URL:</span> <input class='slide_url_input' name='home_carousel_slides[$slide_num][img]' type='url' ".( isset($img) ? "value='$img'" : "")."/> <a style='display:none;' href=''>Select Existing Image</a>".home_carousel_help_tag($image_help)."<br/>";
+		$input .= "<span class='slide_info_label'>Image URL:</span> <input id='image_select' class='slide_url_input' name='home_carousel_slides[$slide_num][img]' data-slide-num='$slide_num' type='url' ".( isset($img) ? "value='$img'" : "")."/> <input type='button' id='image_select_button' data-slide-num='$slide_num' style='' value='Select Existing Image' >".home_carousel_help_tag($image_help)."<br/>";
 		
 		// Add Crop Checkbox
 		$input .= "<span class='slide_info_label'>Crop?</span> <input class='slide_crop_input' name='home_carousel_slides[$slide_num][crop]' type='checkbox' value='true' ".($cropped ? 'checked' : '')."/><br/>";
@@ -661,6 +741,8 @@ function sanatize_home_carousel_slides($input){
 	return $input;
 }
 
+// TODO: Add Sanatize Settings Function
+
 /****************************
 * CAROUSEL DISPLAY FUNCTION *
 *****************************/
@@ -730,9 +812,12 @@ function home_carousel_display(){
 	
 	// End Carousel
 	$carousel .= "</div>";
+
+	// Get Controller Style
+	$control_style = home_carousel_controller_style();
 	
 	// Place Controller
-	$carousel .= "<div id='controller'></div>";
+	$carousel .= "<div id='controller' $controller_style ></div>";
 	
 	// End Carousel Wrapper
 	$carousel .= "</div>";
@@ -768,7 +853,7 @@ function home_carousel_image_style($slide_num){
 	$image_style .= "background-size:".($data['crop'] ? "100% auto;" : "contain;");
 	
 	// Set Background Color
-	$image_style .= "background-color:$settings[image_color];";
+	$image_style .= "background-color:#$settings[image_color];";
 	
 	// Check if Text Overlaps Image
 	if( $settings['overlap'] ){
@@ -785,7 +870,7 @@ function home_carousel_image_style($slide_num){
 	$image_style .= " background-position:$settings[image_loc];";
 	
 	// Set Image Height and Width
-	$image_style .= " height:".$img_height."px; width:".$img_width."%;'";
+	$image_style .= " height:".$img_height."%; width:".$img_width."%;'";
 	
 	return $image_style;
 }
@@ -809,13 +894,14 @@ function home_carousel_content_style($slide_num){
 	
 	// Check if Text Overlaps Image
 	if( $settings['overlap'] ){
-		
+		// DO NOTHING	
 	}else{ // Text doesn't overlap image
 		if( $settings['content_loc'] == 'left' ){
 			$content_style .= " float:right;";
 		}elseif( $settings['content_loc'] == 'right' ){
 			$content_style .= " float:left;";
 		}
+		// TODO: Add Content Location of Below, Above, Bottom and Top
 	}
 	
 	$content_style .= "'";
@@ -823,6 +909,15 @@ function home_carousel_content_style($slide_num){
 	return $content_style;
 }
 
+function home_carousel_controller_style(){
+	$controller_style = "style='";
+	
+	// TODO: Add Controller Style Generator
+	
+	$controller_style = "'";
+
+	return $controller_style;
+}
 /*******************
 * HELPER FUNCTIONS *
 ********************/
