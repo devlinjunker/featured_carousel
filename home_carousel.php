@@ -11,7 +11,11 @@ Last Updated: 12/11/2012
 This plugin inherits the GPL license from it's parent system, WordPress.
 */
 
+/*****************
+* INCLUDED FILES *
+******************/
 
+ 
 /*****************************************
 * DEFINE VARIABLES TO BE USED FOR PLUGIN *
 ******************************************/
@@ -36,8 +40,8 @@ $home_carousel_effects = array(
 $content_locations = array(
 	'left' 			=> 'Left', 
 	'right' 		=> 'Right',
-	//'top'			=> 'Top',
 	//'bottom'		=> 'Bottom',
+	//'top'			=> 'Top',
 	//'below' 		=> 'Below',
 	//'above' 		=> 'Above'
 );
@@ -96,6 +100,7 @@ $home_carousel_settings_defaults = apply_filters('home_carousel_settings_default
 	'content_loc'	=> 'left',
 	'content_height'=> 100,
 	'content_width' => 25,
+	'content_pad'	=> 20,
 	'content_color' => '000000',
 	'text_color' 	=> 'FFFFFF',
 	'title_size'	=> 'h2',
@@ -256,9 +261,8 @@ function register_home_carousel_settings_page(){
 	// Register Stylesheets
 	wp_register_style( 'home_carousel_options_styles', plugins_url('options.css', __FILE__) );
 	
-	//TODO: ADD SANATIZE FUNCTION
-	register_setting( 'home_carousel_settings_group', 'home_carousel_settings');
-	register_setting( 'home_carousel_settings_group', 'home_carousel_slides', 'sanatize_home_carousel_slides'); 
+	register_setting( 'home_carousel_settings_group', 'home_carousel_settings', 'sanitize_home_carousel_settings');
+	register_setting( 'home_carousel_settings_group', 'home_carousel_slides', 'sanitize_home_carousel_slides'); 
 	
 	
 	/*** Section to Configure Slides ***/
@@ -297,6 +301,9 @@ function register_home_carousel_settings_page(){
 	
 	// Add Content Height Field
 	add_settings_field ( 'content_height', 'Content Height', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_content_settings', array( 'setting_name' => 'content_height', 'max_char' => 3, 'follow' => '%', 'explain' => 'Relative to Carousel Container Size' ) );
+	
+	// Add Content Height Field
+	add_settings_field ( 'content_pad', 'Content Padding', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_content_settings', array( 'setting_name' => 'content_pad', 'max_char' => 3, 'follow' => 'px' ) );
 	
 	// Add Content Background Color Field
 	add_settings_field( 'content_color', 'Content Background Color', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_content_settings', array( 'setting_name' => 'content_color', 'max_char' => 6 ) );
@@ -481,7 +488,7 @@ function home_carousel_slide_input($args){
 		$input .= "<span class='slide_info_label'>Image URL:</span> <input id='image_select' class='slide_url_input' name='home_carousel_slides[$slide_num][img]' data-slide-num='$slide_num' type='url' ".( isset($img) ? "value='$img'" : "")."/> <input type='button' id='image_select_button' data-slide-num='$slide_num' style='' value='Select Existing Image' >".home_carousel_help_tag($image_help)."<br/>";
 		
 		// Add Crop Checkbox
-		$input .= "<span class='slide_info_label'>Crop?</span> <input class='slide_crop_input' name='home_carousel_slides[$slide_num][crop]' type='checkbox' value='true' ".($cropped ? 'checked' : '')."/><br/>";
+		$input .= "<span class='slide_info_label'>Crop to Fit?</span> <input class='slide_crop_input' name='home_carousel_slides[$slide_num][crop]' type='checkbox' value='true' ".($cropped ? 'checked' : '')."/><br/>";
 		
 		// Add Text Input
 		$input .= "<span class='slide_info_label'>Text:<br/>".home_carousel_help_tag($text_help)."</span> <textarea class='slide_text_input' name='home_carousel_slides[$slide_num][text]' placeholder='".( !empty($excerpt) ? $excerpt : $first_string)."'>".( isset($text) ? $text : "")."</textarea><br/>";
@@ -671,7 +678,7 @@ function home_carousel_settings_dropdown($args){
 ## Cleans and Fills in Missing Data
 ##	$input 	- required - auto 	- Data to be cleaned and filled in
 ##
-function sanatize_home_carousel_slides($input){
+function sanitize_home_carousel_slides($input){
 	global $home_carousel_settings;
 	
 	$i = 0;
@@ -680,7 +687,7 @@ function sanatize_home_carousel_slides($input){
 		// Check if supposed to have data
 		if( $i < $home_carousel_settings['slide_count'] ){
 			// Sanatize the Link URL
-			$input[$slide_num]['url'] = clean_url( $data['url'] );
+			$input[$slide_num]['url'] = esc_url( $data['url'] );
 			
 			
 			$in_site = (($post_id = my_bwp_url_to_postid( $input[$slide_num]['url'] )) != 0);
@@ -691,7 +698,7 @@ function sanatize_home_carousel_slides($input){
 					// If blank text, get page intro
 					$input[$slide_num]['text'] = home_carousel_page_intro( $post_id );
 				}else{
-					// TODO: SANATIZE STRING
+					$input[$slide_num]['text'] = sanitize_text_field($data['text']);
 				}
 				
 				
@@ -701,13 +708,11 @@ function sanatize_home_carousel_slides($input){
 						$info = wp_get_attachment_image_src( get_post_thumbnail_id( $post_id ), 'single-post-thumbnail' );
 						
 						$input[$slide_num]['img'] = $info[0];
-					}else{
-						// TODO: DO SOMETHING IF NO THUMBNAIL
 					}
 					
 				}else{
 					// Otherwise Clean Image URL
-					$input[$slide_num]['img'] = clean_url( $data['img'] ); 
+					$input[$slide_num]['img'] = esc_url( $data['img'] ); 
 				}
 				
 				
@@ -715,11 +720,39 @@ function sanatize_home_carousel_slides($input){
 					// If title blank, get post title
 					$input[$slide_num]['title'] = get_the_title( $post_id );
 				}else{
-					// TODO: SANATIZE STRING
+					$input[$slide_num]['title'] = sanitize_text_field( $data['title'] );
 				}
-			}else{ 
+			}elseif( !empty( $input[$slide_num]['url'] ) ){ 
 				// Not In Site
-				// TODO: SANATIZE/FILL IN NON-SITE DATA
+				
+				// Sanatize Text String
+				$input[$slide_num]['text'] = sanitize_text_field( $data['text'] );
+				
+				$html = file_get_contents( $data['url'] );
+				
+				$DOM = new DOMDocument;
+				$DOM->loadHTML( $html );
+
+				// Sanatize/Fill in Title	
+				if( $data['title'] == "" ){
+					$objs = $DOM->getElementsByTagName('title');
+					
+					$input[$slide_num]['title'] =  $objs->item(0)->nodeValue;
+				}else{
+					$input[$slide_num]['title'] = sanitize_text_field( $data['title'] );
+				}
+
+				// Sanatize/Fill in Image URL	
+				if( $data['img'] == "" ){
+					$body = $DOM->getElementsByTagName('body');
+
+					$objs = $body->item(0)->getElementsByTagName('img');
+
+					$input[$slide_num]['img'] = esc_url( $objs->item(0)->getAttribute('src') );
+				}else{
+					$input[$slide_num]['img'] = esc_url( $data['img'] );
+				}
+
 			}
 			
 			if( $data['crop'] == 'true' ){
@@ -741,8 +774,12 @@ function sanatize_home_carousel_slides($input){
 	return $input;
 }
 
-// TODO: Add Sanatize Settings Function
+function sanitize_home_carousel_settings($input){
 
+	// TODO: Add Sanatize Settings Function
+	
+	return $input;
+}
 /****************************
 * CAROUSEL DISPLAY FUNCTION *
 *****************************/
@@ -769,7 +806,7 @@ function home_carousel_display(){
 		if( $i < $settings['slide_count'] ){
 			
 			// Start Slide
-			$carousel .= "<div id='$slide_num' style='height:100%;width:100%;'>";
+			$carousel .= "<div id='$slide_num' style='height:100%;width:100%;".( $i > 0 ? "display:none;" : "" )."'>";
 			
 			// Start Link if slide has Link URL
 			if( !empty( $data['url'] ) ){
@@ -782,9 +819,10 @@ function home_carousel_display(){
 			
 			// Get Title Size and Location
 			$title_tag = $settings['title_size'];
-			
 			$title_tag .= " style='display:$settings[title_loc]'";
-			
+		
+			$title = ( !empty( $data['title'] ) ? $data['title'].':' : "");
+	
 			// Start Image
 			$carousel .= "<div id='slide_image' $image_style>";
 			
@@ -793,7 +831,7 @@ function home_carousel_display(){
 			}
 			
 			// Display Slide Content
-			$carousel .= "<div id='slide_content' $content_style><$title_tag>$data[title]:</$title_tag><p style='display:$settings[title_loc];'> $data[text]</p></div>";
+			$carousel .= "<div id='slide_content' $content_style><$title_tag>$title</$title_tag><p style='display:$settings[title_loc];'> $data[text]</p></div>";
 			
 			if( $settings['overlap'] ){ // If Overlap
 				$carousel .= "</div>"; // End Image 
@@ -835,25 +873,27 @@ function home_carousel_image_style($slide_num){
 	$has_image = !empty( $data['img'] );
 	
 	// Get Image Dimensions
-	if( $settings['overlap'] ){
-		$img_height = 100;
-		$img_width = 100;
-	}else{
-		if( $settings['content-width'] != 100 ){
-			$img_width = 100 - $settings['content_width'];
-		}elseif( $settings['content-height'] != 100 ){
-			$img_height = 100 - $settings['content_height']; 
-		}
+	$img_height = 100;
+	$img_width = 100;
+
+	if( $settings['content_width'] != 100 ){
+		$img_width = 100 - $settings['content_width'];
+	}
+	if( $settings['content_height'] != 100 ){
+		$img_height = 100 - $settings['content_height']; 
 	}
 	
 	// Add Image if Exists
 	$image_style = "style='".( $has_image ? "background-image:url($data[img]);" : "" );
 	
+	// Set Image Height and Width
+	$image_style .= " height:".$img_height."%; width:".$img_width."%;";
+
 	// Crop Image if Specified
-	$image_style .= "background-size:".($data['crop'] ? "100% auto;" : "contain;");
+	$image_style .= " background-size:".($data['crop'] ? "100% auto;" : "contain;");
 	
 	// Set Background Color
-	$image_style .= "background-color:#$settings[image_color];";
+	$image_style .= " background-color:#$settings[image_color];";
 	
 	// Check if Text Overlaps Image
 	if( $settings['overlap'] ){
@@ -864,13 +904,11 @@ function home_carousel_image_style($slide_num){
 		}elseif( $settings['content_loc'] == 'right' ){
 			$image_style .= " float:left;";
 		}
+		// TODO: Add Content Location Bottom, Top, Below and Above
 	}
 	
 	// Set Image Location
-	$image_style .= " background-position:$settings[image_loc];";
-	
-	// Set Image Height and Width
-	$image_style .= " height:".$img_height."%; width:".$img_width."%;'";
+	$image_style .= " background-position:$settings[image_loc];'";
 	
 	return $image_style;
 }
@@ -880,17 +918,27 @@ function home_carousel_content_style($slide_num){
 	
 	$settings = $home_carousel_settings;
 	
-	$clr = $settings['content_color'];
 	
+	// Get Opacity Value	
 	if( $settings['overlap'] or $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above'){
 		$opacity = $settings['opacity']/100;
 	}else{
 		$opacity = 1;
 	}
-	
+
+	// Create Background Color Value	
+	$clr = $settings['content_color'];
+
+	$bgcolor = "rgba($clr[0]$clr[1], $clr[2]$clr[3], $clr[4]$clr[5], $opacity)";
+		
+	// Get Width and Height Values
+	if( $settings['content_loc'] == 'left' or $settings['content_loc'] == 'right' ){
+		$width = $settings['content_width']."%";
+		$height = $settings['content_height']."%";
+	}	
 	
 	// Build Content Style from Settings
-	$content_style = "style='width:$settings[content_width]%; height:$settings[content_height]%; background-color:rgba($clr[0]$clr[1], $clr[2]$clr[3], $clr[4]$clr[5], $opacity); color: #$settings[text_color]; padding: 20px;";
+	$content_style = "style='width:$width; height:$height; background-color:$bgcolor; color: #$settings[text_color]; padding: $settings[content_pad]px;";
 	
 	// Check if Text Overlaps Image
 	if( $settings['overlap'] ){
@@ -900,7 +948,15 @@ function home_carousel_content_style($slide_num){
 			$content_style .= " float:right;";
 		}elseif( $settings['content_loc'] == 'right' ){
 			$content_style .= " float:left;";
-		}
+		}elseif( $settings['content_loc'] == 'bottom'){
+			//$content_style .= " position:relative; bottom: 0%; ";
+		}elseif( $settings['content_loc'] == 'top'){
+
+		}elseif( $settings['content_loc'] == 'below'){
+
+		}elseif( $settings['content_loc'] == 'above'){
+
+		} 
 		// TODO: Add Content Location of Below, Above, Bottom and Top
 	}
 	
@@ -978,7 +1034,6 @@ function home_carousel_error($e_string, $args){
 	trigger_error( vsprintf( $e_string, $arg_string ) );
 }
 
-##
 ## Function Taken From:
 ## http://betterwp.net/wordpress-tips/url_to_postid-for-custom-post-types/
 ##
