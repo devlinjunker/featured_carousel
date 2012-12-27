@@ -47,18 +47,18 @@ $content_locations = array(
 );
 
 $controller_locations = array(
-	'content-top-left'	=> 'Upper Left of Content',
-	'content-top-middle'	=> 'Upper Middle of Content',
-	'content-top-right'	=> 'Upper Right of Content',
-	'content-bottom-left'	=> 'Lower Left of Content',
-	'content-bottom-middle' => 'Lower Middle of Content',
-	'content-bottom-top'	=> 'Lower Right of Content',
-	'image-top-left'	=> 'Upper Left of Image',
-	'image-top-middle'	=> 'Upper Middle of Image',
-	'image-top-right'	=> 'Upper Right of Image',
-	'image-bottom-left'	=> 'Lower Left of Image',
-	'image-bottom-middle'	=> 'Lower Middle of Image',
-	'image-bottom-right'	=> 'Lower Right of Image'
+//	'content_top_left'	=> 'Upper Left of Content',
+//	'content_top_middle'	=> 'Upper Middle of Content',
+//	'content_top_right'	=> 'Upper Right of Content',
+//	'content_bottom_left'	=> 'Lower Left of Content',
+//	'content_bottom_middle' => 'Lower Middle of Content',
+//	'content_bottom_top'	=> 'Lower Right of Content',
+	'image_top_left'	=> 'Upper Left of Image',
+	'image_top_middle'	=> 'Upper Middle of Image',
+	'image_top_right'	=> 'Upper Right of Image',
+	'image_bottom_left'	=> 'Lower Left of Image',
+	'image_bottom_middle'	=> 'Lower Middle of Image',
+	'image_bottom_right'	=> 'Lower Right of Image'
 );
 
 $image_locations = array(
@@ -74,8 +74,8 @@ $title_sizes = array(
 	'h4'			=> 'Header 4',
 	'h5'			=> 'Header 5',
 	'h6'			=> 'Header 6',
-	'b'				=> 'Bolded',
-	'p'				=> 'Font Size',
+	'b'			=> 'Bolded',
+	'p'			=> 'Font Size',
 );
 
 $title_locs = array(
@@ -85,44 +85,45 @@ $title_locs = array(
 
 // Defaults settings for Carousel
 $home_carousel_settings_defaults = apply_filters('home_carousel_settings_defaults', array(
-	'slide_count' 	=> 2,
+	'slide_count' 		=> 2,
 	
 	// Container Settings
 	'div' 			=> 'carousel',
-	'height' 		=> 250,
-	'width' 		=> 938,
+	'height' 		=> 250,		// Pixels
+	'width' 		=> 938,		// Pixels
 	
 	// Image Settings
 	'image_loc'		=> 'center',
-	'image_color' 	=> 'FFFFFF',
+	'image_color' 		=> 'FFFFFF',
 	
 	// Content Settings
-	'content_loc'	=> 'left',
-	'content_height'=> 100,
-	'content_width' => 25,
-	'content_pad'	=> 20,
-	'content_color' => '000000',
-	'text_color' 	=> 'FFFFFF',
-	'title_size'	=> 'h2',
-	'title_location'=> 'block',
+	'content_loc'		=> 'left',
+	'content_height'	=> 100,		// Percent
+	'content_width' 	=> 25, 		// Percent
+	'content_pad'		=> 20,		// Pixels
+	'content_color' 	=> '000000',
+	'text_color' 		=> 'FFFFFF',
+	'title_size'		=> 'h2',
+	'title_location'	=> 'block',
 	'overlap' 		=> false,
-	'opacity'		=> '40',
+	'opacity'		=> '40',	// Percent
 	
 	// Controller Settings
-	'control_visible'=>true,
-	'control_loc'	=> 'image-top-right',
-	'slide_nums'	=> true,
-	'control_opacity'=>'100',
-	'control_color' => '000000',
-	'active_color'	=> '000000',
-	'active_text'	=> 'FFFFFF',
-	'inactive_color'=> 'FFFFFF',
-	'inactive_text' => '000000',
+	'control_visible'	=> true,
+	'control_loc'		=> 'image-top-right',
+	'slide_nums'		=> true,
+	'control_padding'	=> '7',		// Pixels
+	'control_opacity'	=> '100',	// Percent
+	'control_color' 	=> '000000',
+	'active_color'		=> '000000',
+	'active_text'		=> 'FFFFFF',
+	'inactive_color'	=> 'FFFFFF',
+	'inactive_text'		=> '000000',
 	
 	// Transition Settings
 	'effect' 		=> 'fade',
-	'delay' 		=> 3,
-	'duration' 		=> 1,
+	'delay' 		=> 3,		// Seconds
+	'duration' 		=> 1,		// Seconds
 ));
 
 // Defaults for Slides (no images and placeholder text)
@@ -852,11 +853,19 @@ function home_carousel_display(){
 	$carousel .= "</div>";
 
 	// Get Controller Style
-	$control_style = home_carousel_controller_style();
-	
+	$controller_style = home_carousel_controller_style();
+
 	// Place Controller
-	$carousel .= "<div id='controller' $controller_style ></div>";
-	
+	if( strpos( $settings['control_loc'], 'middle' ) ){
+		$carousel .= "<div id='control_wrap' $controller_style[1]>";
+	}
+
+	$carousel .= "<div id='controller' $controller_style[0]></div>";
+			
+	if( strpos( $settings['control_loc'], 'middle' ) ){
+		$carousel .= "</div>";
+	}
+
 	// End Carousel Wrapper
 	$carousel .= "</div>";
 	
@@ -876,10 +885,10 @@ function home_carousel_image_style($slide_num){
 	$img_height = 100;
 	$img_width = 100;
 
-	if( $settings['content_width'] != 100 ){
+	if( $settings['content_width'] != 100 and !$settings['overlap'] ){
 		$img_width = 100 - $settings['content_width'];
 	}
-	if( $settings['content_height'] != 100 ){
+	if( $settings['content_height'] != 100 and !$settings['overlap'] ){
 		$img_height = 100 - $settings['content_height']; 
 	}
 	
@@ -966,11 +975,161 @@ function home_carousel_content_style($slide_num){
 }
 
 function home_carousel_controller_style(){
-	$controller_style = "style='";
+	global $home_carousel_settings;
+
+	$settings = $home_carousel_settings;
+	
+	$controller_style = array(0 => "style='", 1 => "style='");
 	
 	// TODO: Add Controller Style Generator
 	
-	$controller_style = "'";
+	$controller_style[0] .= "z-index: 5; text-align: center;";
+	
+	// Add Controller Padding 
+	$controller_style[0] .= " padding: $settings[control_padding]px;"; 
+
+	// Add Controller Background Color
+	$clr = $settings['control_color'];
+	$opacity = $settings['control_opacity'] / 100;
+
+	$background = "rgba($clr[0]$clr[1], $clr[2]$clr[3], $clr[4]$clr[5], $opacity)";
+
+	$controller_style[0] .= " background-color:$background;";	
+	
+	$controller_style[0] .= " position: absolute;";
+
+	switch( $settings['control_loc'] ){
+		case 'content_top_left':
+			
+			break;
+
+		case 'content_top_middle':
+			
+			break;
+
+		case 'content_top_right':
+			
+			break;
+
+		case 'content_bottom_left':
+			
+			break;
+
+		case 'content_bottom_middle':
+			
+			break;
+
+		case 'content_bottom_right':
+			
+			break;
+
+		case 'image_top_left':
+			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'bottom' or $settings['content_loc'] == 'right' or $settings['overlap'] == true ){
+				$controller_style[0] .= " top: 0px; left: 0px;";
+			}elseif( $settings['content_loc'] == 'left' ){
+				$controller_style[0] .= " top: 0px; left: ".$settings['content_width']."%;";
+			}elseif( $settings['content_loc'] == 'top' ){
+				$controller_style[0] .= " top: ".$settings['content_height']."%; left: 0px;";
+			}
+			
+			$controller_style[0] .= " border-bottom-right-radius: 6px;";
+
+			break;
+
+		case( 'image_top_middle' ):
+			// TODO: ADD image_top_middle style
+			// Centering Element can be done by using two divs inner and outer, both with the width of the controller, center the outer div then use margin -50% on the inner div to center appropriately. :)
+			
+			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'bottom' or $settings['overlap'] == true ){
+				$controller_style[1] .= " position: absolute; top: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 2)."em;";
+
+			}elseif( $settings['content_loc'] == 'left' ){
+				$controller_style[1] .= " position: absolute; top: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " right: -50%; width: ".($settings['slide_count'] + 2)."em;";
+
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[1] .= " position: absolute; top: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 2)."em;";
+
+			}elseif( $settings['content_loc'] == 'top' ){
+				$controller_style[1] .= " position: absolute; top: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 2)."em;";
+
+			}
+
+			$controller_style[0] .= " border-bottom-right-radius: 6px; border-bottom-left-radius: 6px;";
+			
+			break;
+
+		case( 'image_top_right' ):
+			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'left' or $settings['content_loc'] == 'bottom' or $settings['overlap'] == true ){
+				$controller_style[0] .= " top: 0px; right: 0px;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[0] .= " top: 0px; right: ".$settings['content_width']."%;";
+			}elseif( $settings['content_loc'] == 'top' ){
+				$controller_style[0] .= " top: ".$settings['content_height']."%; left: 0px;";
+			}
+
+			$controller_style[0] .= " border-bottom-left-radius: 6px;";
+
+			break;
+
+		case( 'image_bottom_left' ):
+			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'right' or $settings['overlap'] == true ){
+				$controller_style[0] .= " bottom: 0px; left: 0px;";
+			}elseif( $settings['content_loc'] == 'left' ){
+				$controller_style[0] .= " bottom: 0px; left: $settings[content_width]%;";
+			}elseif( $settings['content_loc'] == 'bottom' ){
+				$controller_style[0] .= " bottom: $settings[content_height]%; left: 0px;";
+			}
+
+			$controller_style[0] .= " border-top-right-radius: 6px;";
+
+			break;
+
+		case( 'image_bottom_middle' ):
+			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'top' or $settings['overlap'] == true ){
+				$controller_style[1] .= " position: absolute; bottom: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " bottom: 0px; left: -50%; width: ".($settings['slide_count'] + 2)."em;";
+				
+			}elseif( $settings['content_loc'] == 'left' ){
+				$controller_style[1] .= " position: absolute; bottom: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 2)."em;";
+				
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[1] .= " position: absolute; bottom: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " bottom: 0px; left: -50%; width: ".($settings['slide_count'] + 2)."em;";
+			
+			}elseif( $settings['content_loc'] == 'bottom' ){
+				$controller_style[1] .= " position: absolute; bottom: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[0] .= " bottom: ".$settings['content_height']."%; left: -50%; width: ".($settings['slide_count'] + 2)."em;";
+
+			}
+
+			$controller_style[0] .= " border-top-right-radius: 6px; border-top-left-radius: 6px;";
+	
+			break;
+
+		case( 'image_bottom_right' ):
+			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'left' or $settings['content_loc'] == 'top' or $settings['overlap'] == true ){
+				$controller_style[0] .= " bottom: 0px; right: 0px;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[0] .= " bottom: 0px; right: $settings[content_width]%;";
+			}elseif( $settings['content_loc'] == 'bottom' ){
+				$controller_style[0] .= " bottom: $settings[content_height]%; left: 0px;";
+			}
+
+			$controller_style[0] .= " border-top-left-radius: 6px;";
+			
+			break;
+
+	}
+
+	$controller_style[0] .= "'";
+	$controller_style[1] .= "'";
+	
+	
 
 	return $controller_style;
 }
