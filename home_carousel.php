@@ -47,12 +47,12 @@ $content_locations = array(
 );
 
 $controller_locations = array(
-//	'content_top_left'	=> 'Upper Left of Content',
-//	'content_top_middle'	=> 'Upper Middle of Content',
-//	'content_top_right'	=> 'Upper Right of Content',
-//	'content_bottom_left'	=> 'Lower Left of Content',
-//	'content_bottom_middle' => 'Lower Middle of Content',
-//	'content_bottom_top'	=> 'Lower Right of Content',
+	'content_top_left'	=> 'Upper Left of Content',
+	'content_top_middle'	=> 'Upper Middle of Content',
+	'content_top_right'	=> 'Upper Right of Content',
+	'content_bottom_left'	=> 'Lower Left of Content',
+	'content_bottom_middle' => 'Lower Middle of Content',
+	'content_bottom_right'	=> 'Lower Right of Content',
 	'image_top_left'	=> 'Upper Left of Image',
 	'image_top_middle'	=> 'Upper Middle of Image',
 	'image_top_right'	=> 'Upper Right of Image',
@@ -192,6 +192,21 @@ function home_carousel_display_header_script(){
 		});
 	});
 	</script>";
+	
+	if( $home_carousel_settings['control_visible'] == true ){
+		$clr = $home_carousel_settings['control_color'];
+		print "<style>
+			#controller a{
+				background-color: #$home_carousel_settings[inactive_color];
+				color: #$home_carousel_settings[inactive_text];
+			}
+
+			#controller a.activeSlide, #controller a:hover{
+				background-color: #$home_carousel_settings[active_color];
+				color: #$home_carousel_settings[active_text];
+			}
+		</style>";
+	}
 }
 
 /********************************
@@ -341,8 +356,8 @@ function register_home_carousel_settings_page(){
 	add_settings_field( 'control_visible', 'Controller Visible', 'home_carousel_settings_checkbox', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_visible', 'explain' => 'Check to Show Controller on Carousel' ) );
 
 	add_settings_field( 'control_loc', 'Controller Location', 'home_carousel_settings_dropdown', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_loc', 'options' => $controller_locations ) );
-
-	add_settings_field( 'slide_nums', 'Controller Slide Numbers', 'home_carousel_settings_checkbox', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'slide_nums', 'explain' => 'Check to Show Slide Numbers on Controller' ) ); 
+	// TODO: Make Visible once implemented
+//	add_settings_field( 'slide_nums', 'Controller Slide Numbers', 'home_carousel_settings_checkbox', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'slide_nums', 'explain' => 'Check to Show Slide Numbers on Controller' ) ); 
 	
 	add_settings_field( 'control_opacity', 'Controller Background Opacity', 'home_carousel_settings_text_input', 'home_carousel', 'home_carousel_controller_settings', array( 'setting_name' => 'control_opacity', 'max_char' => 3 ) );
 
@@ -851,19 +866,22 @@ function home_carousel_display(){
 	
 	// End Carousel
 	$carousel .= "</div>";
+	
+	// Display Carousel if Set
+	if( $settings['control_visible'] == true ){
+		// Get Controller Style
+		$controller_style = home_carousel_controller_style();
 
-	// Get Controller Style
-	$controller_style = home_carousel_controller_style();
+		// Place Controller
+		if( strpos( $settings['control_loc'], 'middle' ) ){
+			$carousel .= "<div id='control_wrap' $controller_style[1]>";
+		}
 
-	// Place Controller
-	if( strpos( $settings['control_loc'], 'middle' ) ){
-		$carousel .= "<div id='control_wrap' $controller_style[1]>";
-	}
-
-	$carousel .= "<div id='controller' $controller_style[0]></div>";
+		$carousel .= "<div id='controller' $controller_style[0]></div>";
 			
-	if( strpos( $settings['control_loc'], 'middle' ) ){
-		$carousel .= "</div>";
+		if( strpos( $settings['control_loc'], 'middle' ) ){
+			$carousel .= "</div>";
+		}
 	}
 
 	// End Carousel Wrapper
@@ -884,6 +902,8 @@ function home_carousel_image_style($slide_num){
 	// Get Image Dimensions
 	$img_height = 100;
 	$img_width = 100;
+	
+	// TODO: Add Image Widths for Bottom, Top, Below and Above
 
 	if( $settings['content_width'] != 100 and !$settings['overlap'] ){
 		$img_width = 100 - $settings['content_width'];
@@ -906,13 +926,22 @@ function home_carousel_image_style($slide_num){
 	
 	// Check if Text Overlaps Image
 	if( $settings['overlap'] ){
-		
+		// DO NOTHING	
 	}else{ // Text doesn't overlap image
 		if( $settings['content_loc'] == 'left' ){
 			$image_style .= " float:right;";
 		}elseif( $settings['content_loc'] == 'right' ){
 			$image_style .= " float:left;";
-		}
+		}elseif( $settings['content_loc'] == 'bottom'){
+			$content_style .= " position: absolute; top: 0%; ";
+		}elseif( $settings['content_loc'] == 'top'){
+
+		}elseif( $settings['content_loc'] == 'below'){
+
+		}elseif( $settings['content_loc'] == 'above'){
+
+		} 
+
 		// TODO: Add Content Location Bottom, Top, Below and Above
 	}
 	
@@ -939,6 +968,8 @@ function home_carousel_content_style($slide_num){
 	$clr = $settings['content_color'];
 
 	$bgcolor = "rgba($clr[0]$clr[1], $clr[2]$clr[3], $clr[4]$clr[5], $opacity)";
+
+	// TODO: Add Content Height and Width for Bottom, Top, Below and Above
 		
 	// Get Width and Height Values
 	if( $settings['content_loc'] == 'left' or $settings['content_loc'] == 'right' ){
@@ -954,11 +985,11 @@ function home_carousel_content_style($slide_num){
 		// DO NOTHING	
 	}else{ // Text doesn't overlap image
 		if( $settings['content_loc'] == 'left' ){
-			$content_style .= " float:right;";
+			$content_style .= " float: right;";
 		}elseif( $settings['content_loc'] == 'right' ){
-			$content_style .= " float:left;";
+			$content_style .= " float: left;";
 		}elseif( $settings['content_loc'] == 'bottom'){
-			//$content_style .= " position:relative; bottom: 0%; ";
+			$content_style .= " position: absolute; bottom: 0%; ";
 		}elseif( $settings['content_loc'] == 'top'){
 
 		}elseif( $settings['content_loc'] == 'below'){
@@ -982,7 +1013,7 @@ function home_carousel_controller_style(){
 	$controller_style = array(0 => "style='", 1 => "style='");
 	
 	// TODO: Add Controller Style Generator
-	
+	// TODO: Add Number Visibility Option	
 	$controller_style[0] .= "z-index: 5; text-align: center;";
 	
 	// Add Controller Padding 
@@ -1000,27 +1031,126 @@ function home_carousel_controller_style(){
 
 	switch( $settings['control_loc'] ){
 		case 'content_top_left':
+			if( $settings['content_loc'] == 'left'){
+				$controller_style[0] .= " top: 0px; left: 0px;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[0] .= " top: 0px;  left:".( 100 - $settings['content_width'] )."%;";
+			}elseif( $settings['content_loc'] == 'top' ){
+	
+			}elseif( $settings['content_loc'] == 'bottom' ){
+
+			}elseif( $settings['content_loc'] == 'above' ){
+
+			}elseif( $settings['content_loc'] == 'below' ){
 			
+			}
+				
+			$controller_style[0] .= " border-bottom-right-radius: 6px;";
+
+
 			break;
 
 		case 'content_top_middle':
+			// Centering Element can be done by using two divs inner and outer, both with the width of the controller, center the outer div then use margin -50% on the inner div to center appropriately. :)
+			if( $settings['content_loc'] == 'left'){
+				$controller_style[1] .= " display: inline-block; position: absolute; top: 0px; right:".( 100 - $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " top: 0px; right: -50%; width: ".($settings['slide_count'] + 2)."em;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[1] .= " display: inline-block; position: absolute; top: 0px; right: ".( $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " top: 0px; right: -50%; width: ".($settings['slide_count'] + 2)."em;";
+			}elseif( $settings['content_loc'] == 'top' ){
+	
+			}elseif( $settings['content_loc'] == 'bottom' ){
+
+			}elseif( $settings['content_loc'] == 'above' ){
+
+			}elseif( $settings['content_loc'] == 'below' ){
 			
+			}
+
+			$controller_style[0] .= " border-bottom-left-radius: 6px; border-bottom-right-radius: 6px;";
+
 			break;
 
 		case 'content_top_right':
+			if( $settings['content_loc'] == 'left'){
+				$controller_style[0] .= " top: 0px; right:".( 100 - $settings['content_width'] )."%;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[0] .= " top: 0px; right: 0px;";
+			}elseif( $settings['content_loc'] == 'top' ){
+	
+			}elseif( $settings['content_loc'] == 'bottom' ){
+
+			}elseif( $settings['content_loc'] == 'above' ){
+
+			}elseif( $settings['content_loc'] == 'below' ){
 			
+			}
+				
+			$controller_style[0] .= " border-bottom-left-radius: 6px;";
+
+
 			break;
 
 		case 'content_bottom_left':
+			if( $settings['content_loc'] == 'left'){
+				$controller_style[0] .= " bottom: 0px; left: 0px;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[0] .= " bottom: 0px; left:".( 100 - $settings['content_width'] )."%;";
+			}elseif( $settings['content_loc'] == 'top' ){
+	
+			}elseif( $settings['content_loc'] == 'bottom' ){
+
+			}elseif( $settings['content_loc'] == 'above' ){
+
+			}elseif( $settings['content_loc'] == 'below' ){
 			
+			}
+				
+			$controller_style[0] .= " border-top-right-radius: 6px;";
+
+
 			break;
 
 		case 'content_bottom_middle':
+			// Centering Element can be done by using two divs inner and outer, both with the width of the controller, center the outer div then use margin -50% on the inner div to center appropriately. :)
+			if( $settings['content_loc'] == 'left'){
+				$controller_style[1] .= " display: inline-block; position: absolute; bottom: 0px; right:".( 100 - $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 2)."em;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[1] .= " display: inline-block; position: absolute; bottom: 0px; right: ".( $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 2)."em;";
+			}elseif( $settings['content_loc'] == 'top' ){
+	
+			}elseif( $settings['content_loc'] == 'bottom' ){
+
+			}elseif( $settings['content_loc'] == 'above' ){
+
+			}elseif( $settings['content_loc'] == 'below' ){
 			
+			}
+			
+			$controller_style[0] .= " border-top-right-radius: 6px; border-top-left-radius: 6px;";
+
 			break;
 
 		case 'content_bottom_right':
+			if( $settings['content_loc'] == 'left'){
+				$controller_style[0] .= " bottom: 0px; right:".( 100 - $settings['content_width'] )."%;";
+			}elseif( $settings['content_loc'] == 'right' ){
+				$controller_style[0] .= " bottom: 0px; right: 0px;";
+			}elseif( $settings['content_loc'] == 'top' ){
+	
+			}elseif( $settings['content_loc'] == 'bottom' ){
+
+			}elseif( $settings['content_loc'] == 'above' ){
+
+			}elseif( $settings['content_loc'] == 'below' ){
 			
+			}
+				
+			$controller_style[0] .= " border-top-left-radius: 6px;";
+
 			break;
 
 		case 'image_top_left':
@@ -1037,23 +1167,20 @@ function home_carousel_controller_style(){
 			break;
 
 		case( 'image_top_middle' ):
-			// TODO: ADD image_top_middle style
-			// Centering Element can be done by using two divs inner and outer, both with the width of the controller, center the outer div then use margin -50% on the inner div to center appropriately. :)
-			
 			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'bottom' or $settings['overlap'] == true ){
-				$controller_style[1] .= " position: absolute; top: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; top: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 2)."em;";
 
 			}elseif( $settings['content_loc'] == 'left' ){
-				$controller_style[1] .= " position: absolute; top: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; top: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " right: -50%; width: ".($settings['slide_count'] + 2)."em;";
 
 			}elseif( $settings['content_loc'] == 'right' ){
-				$controller_style[1] .= " position: absolute; top: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; top: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 2)."em;";
 
 			}elseif( $settings['content_loc'] == 'top' ){
-				$controller_style[1] .= " position: absolute; top: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; top: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 2)."em;";
 
 			}
@@ -1090,19 +1217,19 @@ function home_carousel_controller_style(){
 
 		case( 'image_bottom_middle' ):
 			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'top' or $settings['overlap'] == true ){
-				$controller_style[1] .= " position: absolute; bottom: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; bottom: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " bottom: 0px; left: -50%; width: ".($settings['slide_count'] + 2)."em;";
 				
 			}elseif( $settings['content_loc'] == 'left' ){
-				$controller_style[1] .= " position: absolute; bottom: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; bottom: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 2)."em;";
 				
 			}elseif( $settings['content_loc'] == 'right' ){
-				$controller_style[1] .= " position: absolute; bottom: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; bottom: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " bottom: 0px; left: -50%; width: ".($settings['slide_count'] + 2)."em;";
 			
 			}elseif( $settings['content_loc'] == 'bottom' ){
-				$controller_style[1] .= " position: absolute; bottom: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em;";
+				$controller_style[1] .= " position: absolute; bottom: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 2)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
 				$controller_style[0] .= " bottom: ".$settings['content_height']."%; left: -50%; width: ".($settings['slide_count'] + 2)."em;";
 
 			}
