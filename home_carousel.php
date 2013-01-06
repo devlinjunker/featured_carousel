@@ -47,18 +47,18 @@ $content_locations = array(
 );
 
 $controller_locations = array(
-	'content_top_left'	=> 'Upper Left of Content',
-	'content_top_middle'	=> 'Upper Middle of Content',
-	'content_top_right'	=> 'Upper Right of Content',
-	'content_bottom_left'	=> 'Lower Left of Content',
-	'content_bottom_middle' => 'Lower Middle of Content',
-	'content_bottom_right'	=> 'Lower Right of Content',
-	'image_top_left'	=> 'Upper Left of Image',
-	'image_top_middle'	=> 'Upper Middle of Image',
-	'image_top_right'	=> 'Upper Right of Image',
-	'image_bottom_left'	=> 'Lower Left of Image',
-	'image_bottom_middle'	=> 'Lower Middle of Image',
-	'image_bottom_right'	=> 'Lower Right of Image'
+	'content_top_left'	=> 'Content Upper Left',
+	'content_top_middle'	=> 'Content Upper Middle',
+	'content_top_right'	=> 'Content Upper Right',
+	'content_bottom_left'	=> 'Content Lower Left',
+	'content_bottom_middle' => 'Content Lower Middle',
+	'content_bottom_right'	=> 'Content Lower Right',
+	'image_top_left'	=> 'Image Upper Left',
+	'image_top_middle'	=> 'Image Upper Middle',
+	'image_top_right'	=> 'Image Upper Right',
+	'image_bottom_left'	=> 'Image Lower Left',
+	'image_bottom_middle'	=> 'Image Lower Middle',
+	'image_bottom_right'	=> 'Image Lower Right'
 );
 
 $image_locations = array(
@@ -129,19 +129,21 @@ $home_carousel_settings_defaults = apply_filters('home_carousel_settings_default
 // Defaults for Slides (no images and placeholder text)
 $home_carousel_slides_defaults = apply_filters ('home_carousel_slides_defaults', array(
 	's_1' => array(
-				'url' 	=> Null,
-				'title' => "PlaceHolder Title",
-				'text' 	=> "This is the Home Carousel Plugin, you can edit the content of the carousel from the Home Carousel Tab in the Admin Menu",
-				'img' 	=> Null,
-				'crop' 	=> false
-				),
+			'url' 		=> Null,
+			'title' 	=> "PlaceHolder Title",
+			'text' 		=> "This is the Home Carousel Plugin, you can edit the content of the carousel from the Home Carousel Tab in the Admin Menu",
+			'img' 		=> Null,
+			'title_visible'	=> true,
+			'crop' 		=> false
+			),
 	's_2' => array(
-				'url' 	=> Null,
-				'title' => "PlaceHolder Title",
-				'text' 	=> "This is the Home Carousel Plugin, you can edit the content of the carousel from the Home Carousel Tab in the Admin Menu",
-				'img' 	=> Null,
-				'crop' 	=> false
-				)
+			'url' 		=> Null,
+			'title' 	=> "PlaceHolder Title",
+			'text' 		=> "This is the Home Carousel Plugin, you can edit the content of the carousel from the Home Carousel Tab in the Admin Menu",
+			'img' 		=> Null,
+			'title_visible'	=> true,
+			'crop' 		=> false
+			)
 ));
 
 //	Pull the User Defined Settings from the DB
@@ -194,7 +196,6 @@ function home_carousel_display_header_script(){
 	</script>";
 	
 	if( $home_carousel_settings['control_visible'] == true ){
-		$clr = $home_carousel_settings['control_color'];
 		print "<style>
 			#controller a{
 				background-color: #$home_carousel_settings[inactive_color];
@@ -469,6 +470,7 @@ function home_carousel_slide_input($args){
 		$text = $home_carousel_slides[$slide_num]['text'];
 		$img = $home_carousel_slides[$slide_num]['img'];
 		$cropped = $home_carousel_slides[$slide_num]['crop'];
+		$title_visible = $home_carousel_slides[$slide_num]['title_visible'];
 		
 		// Create Help Strings
 		$title_help = "If left empty and the Slide URL is a page in your site, the Title will default to the Post Title. If it is an external page, the Title will default to the Web Page Title defined in the <code>&lt;title&gt;</code> tag.";
@@ -500,6 +502,9 @@ function home_carousel_slide_input($args){
 		// Add Title Input
 		$input .= "<span class='slide_info_label'>Title:</span> <input class='slide_title_input' name='home_carousel_slides[$slide_num][title]' type='text' placeholder='$post_title' ".( isset($title) ? "value='$title'" : "")."/>".home_carousel_help_tag($title_help)."<br/>";
 		
+		// Add Title Display Checkbox
+		$input .= "<span class='slide_info_label'>Display Title</span> <input class='slide_title_visible_input' name='home_carousel_slides[$slide_num][title_visible]' type='checkbox' value='true' ".($title_visible ? 'checked' : '')."/><br/>";
+	
 		// Add Image Input
 		$input .= "<span class='slide_info_label'>Image URL:</span> <input id='image_select' class='slide_url_input' name='home_carousel_slides[$slide_num][img]' data-slide-num='$slide_num' type='url' ".( isset($img) ? "value='$img'" : "")."/> <input type='button' id='image_select_button' data-slide-num='$slide_num' style='' value='Select Existing Image' >".home_carousel_help_tag($image_help)."<br/>";
 		
@@ -666,7 +671,17 @@ function home_carousel_settings_dropdown($args){
 		$input .= "<select id='$setting_name' name='home_carousel_settings[$setting_name]'>";
 		
 		foreach( $options as $value => $text ){
-			$input .= "<option value='$value' ".($value == $current_val ? "selected" : "").">$text</option>";
+			if( is_array( $text ) ){
+				$input .= "<optgroup label='$value'>";
+
+				foreach( $text as $array_value => $array_text ){
+					$input .= "<option value='$array_value' ".($array_value == $current_val ? "selected" : "").">$array_text</option>";
+				}
+
+				$input .= "</optgroup>";
+			}else{
+				$input .= "<option value='$value' ".($value == $current_val ? "selected" : "").">$text</option>";
+			}
 		}
 		
 		$input .= "</select>";
@@ -791,9 +806,186 @@ function sanitize_home_carousel_slides($input){
 }
 
 function sanitize_home_carousel_settings($input){
+	global $home_carousel_settings, $home_carousel_defaults;
+	global $image_locations, $content_locations, $controller_locations, $home_carousel_effects, $title_sizes, $title_locations;
 
-	// TODO: Add Sanatize Settings Function
+	$settings = $home_carousel_settings;
+	$defaults = $home_carousel_defaults;
+
+	// Check if Slide Count is Numeric
+	if( !is_numeric( $input['slide_count'] ) ){
+		// If Not, Set to 0
+		$input['slide_count'] = 0;	
+	}
 	
+	// Strip Spaces from Carousel ID
+	$input['div'] = str_replace( ' ', '', sanitize_text_field( $input['div'] ) );
+	
+	// Check if Width is Numeric
+	if( !is_numeric( $input['width'] ) ){
+		// If Not, don't change
+		$input['width'] = $settings['width'];
+	}
+	
+	// Check if Height is Numeric
+	if( !is_numeric( $input['height'] ) ){
+		// If Not, don't change 
+		$input['height'] = $settings['height'];
+	}
+
+	// Check if Image Location is Valid Value
+	if( !array_key_exists( $input['image_loc'], $image_locations ) ){
+		// If not, don't change 
+		$input['image_loc'] = $settings['image_loc']; 
+	}
+
+	// Check if Image Background is 6 digit Hex Value
+	if( preg_match( '[a-fA-F0-9]{6}' , $input['image_background'] ) !== 1 ){
+		// If not, don't change
+		$input['image_background'] = $settings['image_background'];
+	}
+
+	// Check if Content Location is Valid Value
+	if( !array_key_exists( $input['content_loc'], $content_locations ) ){
+		// If not, don't change
+		$input['content_loc'] = $settings['content_loc']; 
+	}
+
+	// Check if Content Height is Numeric
+	if( !is_numeric( $input['content_height'] ) ){
+		// If Not, don't change 
+		$input['content_height'] = $settings['content_height'];
+	}
+
+	// Check if Content Width is Numeric
+	if( !is_numeric( $input['content_width'] ) ){
+		// If Not, don't change 
+		$input['content_width'] = $settings['content_width'];
+	}
+
+	// Check if Content Padding is Numeric
+	if( !is_numeric( $input['content_pad'] ) ){
+		// If Not, don't change 
+		$input['content_pad'] = $settings['content_pad'];
+	}
+
+	// Check if Content Color is 6 digit Hex Value
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['content_color'] ) !== 1 ){
+		// If not, don't change
+		$input['content_color'] = $settings['content_color'];
+	}
+
+	// Check if Content Text Color is 6 digit Hex Value
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['text_color'] ) !== 1 ){
+		// If not, don't change
+		$input['text_color'] = $settings['text_color'];
+	}
+	
+	// Check if Title Size is Valid Value
+	if( !array_key_exists( $input['title_size'], $title_sizes ) ){
+		// If not, don't change
+		$input['title_size'] = $settings['title_size']; 
+	}
+
+	// Check if Title Location is Valid Value
+	if( !array_key_exists( $input['title_loc'], $title_locations ) ){
+		// If not, don't change
+		$input['title_loc'] = $settings['title_loc']; 
+	}
+	
+	// Check Overlap is True or False
+	if( $input['overlap'] == $defaults['overlap'] ){
+		$input['overlap'] = $defaults['overlap'];
+	}else{
+		$input['overlap'] = !$defaults['overlap'];
+	}
+	
+	// Check if Content Opacity Value is Numeric and less than 100
+	if( !is_numeric( $input['opacity'] ) or $input['opacity'] > 100 ){
+		// If Not, don't change
+		$input['opacity'] = $settings['opacity'];
+	}
+	
+	// Check if Controller is Visible or Not
+	if( $input['control_visible'] == $defaults['control_visible'] ){
+		$input['control_visible'] == $defaults['control_visible'];
+	}else{
+		$input['control_visible'] == !$defaults['control_visible'];
+	}
+
+	// Check if Controller Location is Valid Value
+	if( !array_key_exists( $input['control_loc'], $controller_locations ) ){
+		// If not, don't change
+		$input['control_loc'] = $settings['control_loc']; 
+	}
+
+	// Check if Controller is Visible or Not
+	if( $input['slide_nums'] == $defaults['slide_nums'] ){
+		$input['slide_nums'] == $defaults['slide_nums'];
+	}else{
+		$input['slide_nums'] == !$defaults['slide_nums'];
+	}
+
+	// Check if Opacity Padding Value is Numeric
+	if( !is_numeric( $input['control_padding'] ) ){
+		// If Not, don't change
+		$input['control_padding'] = $settings['control_padding'];
+	}
+
+	// Check if Controller Opacity Values is Numeric and less than 100
+	if( !is_numeric( $input['control_opacity'] ) or $input['control_opacity'] > 100 ){
+		// If Not, don't change
+		$input['control_opacity'] = $settings['control_opacity'];
+	}
+
+	// Check if Controller Background Color is 6 digit Hex Value
+	if( preg_match( '[a-fA-F0-9]{6}' , $input['control_color'] ) !== 1 ){
+		// If not, don't change
+		$input['control_color'] = $settings['control_color'];
+	}
+
+	// Check if Controller Active Link Background Color is 6 digit Hex Value
+	if( preg_match( '[a-fA-F0-9]{6}' , $input['active_color'] ) !== 1 ){
+		// If not, don't change
+		$input['active_color'] = $settings['active_color'];
+	}
+
+	// Check if Controller Active Link Text Color is 6 digit Hex Value
+	if( preg_match( '[a-fA-F0-9]{6}' , $input['active_text'] ) !== 1 ){
+		// If not, don't change
+		$input['active_text'] = $settings['active_text'];
+	}
+
+	// Check if Controller Inactive Link Background Color is 6 digit Hex Value
+	if( preg_match( '[a-fA-F0-9]{6}' , $input['inactive_color'] ) !== 1 ){
+		// If not, don't change
+		$input['inactive_color'] = $settings['inactive_color'];
+	}
+
+	// Check if Controller Inactive Link Text Color is 6 digit Hex Value
+	if( preg_match( '[a-fA-F0-9]{6}' , $input['inactive_text'] ) !== 1 ){
+		// If not, don't change
+		$input['inactive_text'] = $settings['inactive_text'];
+	}
+
+	// Check if Transition Effect is Valid Value
+	if( !array_key_exists( $input['effect'], $home_carousel_effects ) ){
+		// If not, don't change
+		$input['effect'] = $settings['effect']; 
+	}
+
+	// Check if Delay Value is Numeric
+	if( !is_numeric( $input['delay'] ) ){
+		// If Not, don't change
+		$input['delay'] = $settings['delay'];
+	}
+
+	// Check if Delay Value is Numeric
+	if( !is_numeric( $input['duration'] ) ){
+		// If Not, don't change
+		$input['duration'] = $settings['duration'];
+	}
+
 	return $input;
 }
 /****************************
@@ -847,7 +1039,7 @@ function home_carousel_display(){
 			}
 			
 			// Display Slide Content
-			$carousel .= "<div id='slide_content' $content_style><$title_tag>$title</$title_tag><p style='display:$settings[title_loc];'> $data[text]</p></div>";
+			$carousel .= "<div id='slide_content' $content_style>".($data['title_visible'] ? "<$title_tag>$title</$title_tag>" : "")."<p style='display:$settings[title_loc];'> $data[text]</p></div>";
 			
 			if( $settings['overlap'] ){ // If Overlap
 				$carousel .= "</div>"; // End Image 
@@ -873,13 +1065,13 @@ function home_carousel_display(){
 		$controller_style = home_carousel_controller_style();
 
 		// Place Controller
-		if( strpos( $settings['control_loc'], 'middle' ) ){
+		if( strpos( $settings['control_loc'], 'middle' ) !== false ){
 			$carousel .= "<div id='control_wrap' $controller_style[1]>";
 		}
 
 		$carousel .= "<div id='controller' $controller_style[0]></div>";
 			
-		if( strpos( $settings['control_loc'], 'middle' ) ){
+		if( strpos( $settings['control_loc'], 'middle' ) !== false ){
 			$carousel .= "</div>";
 		}
 	}
@@ -966,8 +1158,11 @@ function home_carousel_content_style($slide_num){
 
 	// Create Background Color Value	
 	$clr = $settings['content_color'];
+	$red = hexdec( $clr[0].$clr[1] );
+	$green = hexdec( $clr[2].$clr[3] );
+	$blue = hexdec( $clr[4].$clr[5] );
 
-	$bgcolor = "rgba($clr[0]$clr[1], $clr[2]$clr[3], $clr[4]$clr[5], $opacity)";
+	$bgcolor = "rgba($red, $green, $blue, $opacity)";
 
 	// TODO: Add Content Height and Width for Bottom, Top, Below and Above
 		
@@ -979,6 +1174,15 @@ function home_carousel_content_style($slide_num){
 	
 	// Build Content Style from Settings
 	$content_style = "style='width:$width; height:$height; background-color:$bgcolor; color: #$settings[text_color]; padding: $settings[content_pad]px;";
+	
+	// Make sure Controller doesn't cover Text
+	if( $settings['control_visible'] and strpos( $settings['control_loc'], 'content' ) !== false ){
+		if( strpos( $settings['control_loc'], 'top' ) !== false ){
+			$content_style .= "padding-top: 2.5em;";
+		}else{
+			$content_style .= "padding-bottom: 2.5em;";
+		}
+	}
 	
 	// Check if Text Overlaps Image
 	if( $settings['overlap'] ){
@@ -1012,7 +1216,6 @@ function home_carousel_controller_style(){
 	
 	$controller_style = array(0 => "style='", 1 => "style='");
 	
-	// TODO: Add Controller Style Generator
 	// TODO: Add Number Visibility Option	
 	$controller_style[0] .= "z-index: 5; text-align: center;";
 	
@@ -1021,13 +1224,18 @@ function home_carousel_controller_style(){
 
 	// Add Controller Background Color
 	$clr = $settings['control_color'];
+	$red = hexdec( $clr[0].$clr[1] );
+	$green = hexdec( $clr[2].$clr[3] );
+	$blue = hexdec( $clr[4].$clr[5] );
 	$opacity = $settings['control_opacity'] / 100;
 
-	$background = "rgba($clr[0]$clr[1], $clr[2]$clr[3], $clr[4]$clr[5], $opacity)";
+	$background = "rgba($red, $green, $blue, $opacity)";
 
 	$controller_style[0] .= " background-color:$background;";	
 	
 	$controller_style[0] .= " position: absolute;";
+
+	// TODO: Add Top, Bottom, Above and Below Content Location Styles
 
 	switch( $settings['control_loc'] ){
 		case 'content_top_left':
