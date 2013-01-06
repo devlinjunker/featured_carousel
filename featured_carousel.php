@@ -3,10 +3,10 @@
 Plugin Name: Featured Carousel
 Plugin URI: 
 Description: This plugin creates an image carousel from images that are in your gallery and text that is specified on the options page, and/or from the featured image and excerpt of posts on your site. The carousel is created using the jQuery Cycle plugin. You can set what is displayed in the carousel via the options page that is added to the admin menu. You can include the carousel on your homepage by using the <code>featured_carousel_display();</code> template tag, which will generate all the necessary HTML for the carousel.
-Version: 0.1
+Version: 0.2
 Author: Devlin Junker
 Author URI: 
-Last Updated: 12/11/2012
+Last Updated: 1/04/2012
 
 This plugin inherits the GPL license from it's parent system, WordPress.
 */
@@ -840,7 +840,7 @@ function sanitize_featured_carousel_settings($input){
 	}
 
 	// Check if Image Background is 6 digit Hex Value
-	if( preg_match( '[a-fA-F0-9]{6}' , $input['image_background'] ) !== 1 ){
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['image_background'] ) !== 1 ){
 		// If not, don't change
 		$input['image_background'] = $settings['image_background'];
 	}
@@ -939,31 +939,31 @@ function sanitize_featured_carousel_settings($input){
 	}
 
 	// Check if Controller Background Color is 6 digit Hex Value
-	if( preg_match( '[a-fA-F0-9]{6}' , $input['control_color'] ) !== 1 ){
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['control_color'] ) !== 1 ){
 		// If not, don't change
 		$input['control_color'] = $settings['control_color'];
 	}
 
 	// Check if Controller Active Link Background Color is 6 digit Hex Value
-	if( preg_match( '[a-fA-F0-9]{6}' , $input['active_color'] ) !== 1 ){
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['active_color'] ) !== 1 ){
 		// If not, don't change
 		$input['active_color'] = $settings['active_color'];
 	}
 
 	// Check if Controller Active Link Text Color is 6 digit Hex Value
-	if( preg_match( '[a-fA-F0-9]{6}' , $input['active_text'] ) !== 1 ){
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['active_text'] ) !== 1 ){
 		// If not, don't change
 		$input['active_text'] = $settings['active_text'];
 	}
 
 	// Check if Controller Inactive Link Background Color is 6 digit Hex Value
-	if( preg_match( '[a-fA-F0-9]{6}' , $input['inactive_color'] ) !== 1 ){
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['inactive_color'] ) !== 1 ){
 		// If not, don't change
 		$input['inactive_color'] = $settings['inactive_color'];
 	}
 
 	// Check if Controller Inactive Link Text Color is 6 digit Hex Value
-	if( preg_match( '[a-fA-F0-9]{6}' , $input['inactive_text'] ) !== 1 ){
+	if( preg_match( '/[a-fA-F0-9]{6}/' , $input['inactive_text'] ) !== 1 ){
 		// If not, don't change
 		$input['inactive_text'] = $settings['inactive_text'];
 	}
