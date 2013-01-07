@@ -16,6 +16,7 @@ Options
 Once you activate the plugin, a tab will appear on the admin menu near the middle. The tab will take you to the options page where you can modify the carousel settings.
 
 ### Slide Settings
+------------------
 At the top of the Slide Settings, the optimal image size is shown. This is calculated based on the height and width settings as well as the content height and width to determine how big the image should be to fit perfectly inside of the image area.  
 
 #### Slide Count
