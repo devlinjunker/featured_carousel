@@ -1,11 +1,9 @@
 Featured Carousel
 =================
 
-##### Author: Devlin Junker  
+Author: Devlin Junker  
 Version: 0.2  
-Last Updated: 1/6/2013
-###### Version: 0.2
-###### Last Updated: 1/6/2013
+Last Updated: 1/6/2013  
   
   
   
