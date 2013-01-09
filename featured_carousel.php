@@ -1235,8 +1235,14 @@ function featured_carousel_controller_style(){
 	
 	$controller_style[0] .= " position: absolute;z-index:20;";
 
-	$controller_style[0] .= " width: ".($settings['slide_count'] * 2 + ($settings['slide_count'] -1)*.25 + .5)."em;";
-	$controller_style[1] .= " width: ".($settings['slide_count'] * 2 + ($settings['slide_count'] -1)*.25 + .5)."em;";
+	if( strpos( $settings['control_loc'], 'middle' ) !== false ){
+		$controller_style[1] .= " font-size: .75em;";
+	}else{
+		$controller_style[0] .= " font-size: .75em;";
+	}
+
+	$controller_style[0] .= " width: ".($settings['slide_count'] * 2.5)."em;";
+	$controller_style[1] .= " width: ".($settings['slide_count'] * 2.5)."em;";
 
 	// TODO: Add Top, Bottom, Above and Below Content Location Styles
 
