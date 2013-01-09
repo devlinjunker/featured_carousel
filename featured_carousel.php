@@ -1233,7 +1233,10 @@ function featured_carousel_controller_style(){
 
 	$controller_style[0] .= " background-color:$background;";	
 	
-	$controller_style[0] .= " position: absolute;";
+	$controller_style[0] .= " position: absolute;z-index:20;";
+
+	$controller_style[0] .= " width: ".($settings['slide_count'] * 2 + ($settings['slide_count'] -1)*.25 + .5)."em;";
+	$controller_style[1] .= " width: ".($settings['slide_count'] * 2 + ($settings['slide_count'] -1)*.25 + .5)."em;";
 
 	// TODO: Add Top, Bottom, Above and Below Content Location Styles
 
@@ -1261,11 +1264,11 @@ function featured_carousel_controller_style(){
 		case 'content_top_middle':
 			// Centering Element can be done by using two divs inner and outer, both with the width of the controller, center the outer div then use margin -50% on the inner div to center appropriately. :)
 			if( $settings['content_loc'] == 'left'){
-				$controller_style[1] .= " display: inline-block; position: absolute; top: 0px; right:".( 100 - $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " top: 0px; right: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " display: inline-block; position: absolute; top: 0px; right:".( 100 - $settings['content_width']/2 )."%; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " top: 0px; right: -50%;";
 			}elseif( $settings['content_loc'] == 'right' ){
-				$controller_style[1] .= " display: inline-block; position: absolute; top: 0px; right: ".( $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " top: 0px; right: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " display: inline-block; position: absolute; top: 0px; right: ".( $settings['content_width']/2 )."%; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " top: 0px; right: -50%; ";
 			}elseif( $settings['content_loc'] == 'top' ){
 	
 			}elseif( $settings['content_loc'] == 'bottom' ){
@@ -1323,11 +1326,11 @@ function featured_carousel_controller_style(){
 		case 'content_bottom_middle':
 			// Centering Element can be done by using two divs inner and outer, both with the width of the controller, center the outer div then use margin -50% on the inner div to center appropriately. :)
 			if( $settings['content_loc'] == 'left'){
-				$controller_style[1] .= " display: inline-block; position: absolute; bottom: 0px; right:".( 100 - $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " display: inline-block; position: absolute; bottom: 0px; right:".( 100 - $settings['content_width']/2 )."%; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; right: -50%; ";
 			}elseif( $settings['content_loc'] == 'right' ){
-				$controller_style[1] .= " display: inline-block; position: absolute; bottom: 0px; right: ".( $settings['content_width']/2 )."%; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " display: inline-block; position: absolute; bottom: 0px; right: ".( $settings['content_width']/2 )."%; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; right: -50%; ";
 			}elseif( $settings['content_loc'] == 'top' ){
 	
 			}elseif( $settings['content_loc'] == 'bottom' ){
@@ -1376,20 +1379,20 @@ function featured_carousel_controller_style(){
 
 		case( 'image_top_middle' ):
 			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'bottom' or $settings['overlap'] == true ){
-				$controller_style[1] .= " position: absolute; top: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; top: 0px; left: 50%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " left: -50%; ";
 
 			}elseif( $settings['content_loc'] == 'left' ){
-				$controller_style[1] .= " position: absolute; top: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " right: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; top: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " right: -50%; ";
 
 			}elseif( $settings['content_loc'] == 'right' ){
-				$controller_style[1] .= " position: absolute; top: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; top: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " left: -50%; ";
 
 			}elseif( $settings['content_loc'] == 'top' ){
-				$controller_style[1] .= " position: absolute; top: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " left: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; top: ".$settings['content_height']."%; left: 50%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " left: -50%; ";
 
 			}
 
@@ -1425,20 +1428,20 @@ function featured_carousel_controller_style(){
 
 		case( 'image_bottom_middle' ):
 			if( $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' or $settings['content_loc'] == 'top' or $settings['overlap'] == true ){
-				$controller_style[1] .= " position: absolute; bottom: 0px; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " bottom: 0px; left: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; bottom: 0px; left: 50%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; left: -50%; ";
 				
 			}elseif( $settings['content_loc'] == 'left' ){
-				$controller_style[1] .= " position: absolute; bottom: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " bottom: 0px; right: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; bottom: 0px; right: ".((100 - $settings['content_width'])/2)."%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; right: -50%; ";
 				
 			}elseif( $settings['content_loc'] == 'right' ){
-				$controller_style[1] .= " position: absolute; bottom: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " bottom: 0px; left: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; bottom: 0px; left: ".((100 - $settings['content_width'])/2)."%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: 0px; left: -50%; ";
 			
 			}elseif( $settings['content_loc'] == 'bottom' ){
-				$controller_style[1] .= " position: absolute; bottom: ".$settings['content_height']."%; left: 50%; display: inline-block; width: ".($settings['slide_count'] + 3)."em; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
-				$controller_style[0] .= " bottom: ".$settings['content_height']."%; left: -50%; width: ".($settings['slide_count'] + 3)."em;";
+				$controller_style[1] .= " position: absolute; bottom: ".$settings['content_height']."%; left: 50%; display: inline-block; padding-left: $settings[control_padding]px; padding-right: $settings[control_padding]px;";
+				$controller_style[0] .= " bottom: ".$settings['content_height']."%; left: -50%; ";
 
 			}
 
