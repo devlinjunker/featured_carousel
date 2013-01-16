@@ -40,10 +40,10 @@ $featured_carousel_effects = array(
 $content_locations = array(
 	'left' 			=> 'Left', 
 	'right' 		=> 'Right',
-	//'bottom'		=> 'Bottom',
-	//'top'			=> 'Top',
-	//'below' 		=> 'Below',
-	//'above' 		=> 'Above'
+	'bottom'		=> 'Bottom',
+	'top'			=> 'Top',
+	'below' 		=> 'Below',
+	'above' 		=> 'Above'
 );
 
 $controller_locations = array(
@@ -104,7 +104,7 @@ $featured_carousel_settings_defaults = apply_filters('featured_carousel_settings
 	'content_color' 	=> '000000',
 	'text_color' 		=> 'FFFFFF',
 	'title_size'		=> 'h2',
-	'title_location'	=> 'block',
+	'title_loc'		=> 'block',
 	'overlap' 		=> false,
 	'opacity'		=> '40',	// Percent
 	
@@ -314,10 +314,10 @@ function register_featured_carousel_settings_page(){
 	add_settings_field( 'content_loc', 'Content Location', 'featured_carousel_settings_dropdown', 'featured_carousel', 'featured_carousel_content_settings', array( 'setting_name' => 'content_loc', 'options' => $content_locations ) );
 	
 	// Add Content Width Field
-	add_settings_field ( 'content_width', 'Content Width', 'featured_carousel_settings_text_input', 'featured_carousel', 'featured_carousel_content_settings', array( 'setting_name' => 'content_width', 'max_char' => 3, 'follow' => '%', 'explain' => 'Relative to Carousel Container Size' ) );
+	add_settings_field ( 'content_width', 'Content Width', 'featured_carousel_settings_text_input', 'featured_carousel', 'featured_carousel_content_settings', array( 'setting_name' => 'content_width', 'max_char' => 3, 'follow' => '%', 'explain' => 'Relative to Carousel Container Size', 'help' => 'The Content Width Field is only used when the content location is <em>Left</em> or <em>Right</em>' ) );
 	
 	// Add Content Height Field
-	add_settings_field ( 'content_height', 'Content Height', 'featured_carousel_settings_text_input', 'featured_carousel', 'featured_carousel_content_settings', array( 'setting_name' => 'content_height', 'max_char' => 3, 'follow' => '%', 'explain' => 'Relative to Carousel Container Size' ) );
+	add_settings_field ( 'content_height', 'Content Height', 'featured_carousel_settings_text_input', 'featured_carousel', 'featured_carousel_content_settings', array( 'setting_name' => 'content_height', 'max_char' => 3, 'follow' => '%', 'explain' => 'Relative to Carousel Container Size', 'help' => 'The Content Height Field is only used when the content location is <em>Bottom</em>, <em>Top</em>, <em>Below</em> or <em>Above</em>' ) );
 	
 	// Add Content Height Field
 	add_settings_field ( 'content_pad', 'Content Padding', 'featured_carousel_settings_text_input', 'featured_carousel', 'featured_carousel_content_settings', array( 'setting_name' => 'content_pad', 'max_char' => 3, 'follow' => 'px' ) );
@@ -807,7 +807,7 @@ function sanitize_featured_carousel_slides($input){
 
 function sanitize_featured_carousel_settings($input){
 	global $featured_carousel_settings, $featured_carousel_defaults;
-	global $image_locations, $content_locations, $controller_locations, $featured_carousel_effects, $title_sizes, $title_locations;
+	global $image_locations, $content_locations, $controller_locations, $featured_carousel_effects, $title_sizes, $title_locs;
 
 	$settings = $featured_carousel_settings;
 	$defaults = $featured_carousel_defaults;
@@ -888,7 +888,7 @@ function sanitize_featured_carousel_settings($input){
 	}
 
 	// Check if Title Location is Valid Value
-	if( !array_key_exists( $input['title_loc'], $title_locations ) ){
+	if( !array_key_exists( $input['title_loc'], $title_locs ) ){
 		// If not, don't change
 		$input['title_loc'] = $settings['title_loc']; 
 	}
@@ -1001,10 +1001,10 @@ function featured_carousel_display(){
 	$settings = $featured_carousel_settings;
 	
 	// Wrapper: contains carousel and controller
-	$carousel = "<div id='carousel_wrap'>";
+	$carousel = "<div id='carousel_wrap' style='".($settings['content_loc'] == 'above' ? "padding-top:" : ($settings['content_loc'] == 'below' ? "padding-bottom:" : "")).( ($settings['content_loc'] == 'above' or $settings['content_loc'] == 'below') ? ($settings['height']*$settings['content_height']/100)."px;" : "")."'>";
 	
 	// Carousel
-	$carousel .= "<div id='$featured_carousel_settings[div]' style='height:$settings[height]px;width:$settings[width]px;'>";
+	$carousel .= "<div id='$featured_carousel_settings[div]' style='height: $settings[height]px; width: $settings[width]px; margin: auto;'>";
 	
 	$i = 0; 
 	
@@ -1014,7 +1014,7 @@ function featured_carousel_display(){
 		if( $i < $settings['slide_count'] ){
 			
 			// Start Slide
-			$carousel .= "<div id='$slide_num' style='height:100%;width:100%;".( $i > 0 ? "display:none;" : "" )."'>";
+			$carousel .= "<div id='$slide_num' style='height: 100%; width: 100%;".( $i > 0 ? "display:none;" : "" )."'>";
 			
 			// Start Link if slide has Link URL
 			if( !empty( $data['url'] ) ){
@@ -1027,7 +1027,7 @@ function featured_carousel_display(){
 			
 			// Get Title Size and Location
 			$title_tag = $settings['title_size'];
-			$title_tag .= " style='display:$settings[title_loc]'";
+			$title_tag .= " style='display: $settings[title_loc]'";
 		
 			$title = ( !empty( $data['title'] ) ? $data['title'].':' : "");
 	
@@ -1039,7 +1039,7 @@ function featured_carousel_display(){
 			}
 			
 			// Display Slide Content
-			$carousel .= "<div id='slide_content' $content_style>".($data['title_visible'] ? "<$title_tag>$title</$title_tag>" : "")."<p style='display:$settings[title_loc];'> $data[text]</p></div>";
+			$carousel .= "<div id='slide_content' $content_style>".($data['title_visible'] ? "<$title_tag>$title</$settings[title_size]>" : "")."<p style='display: $settings[title_loc];'> $data[text]</p></div>";
 			
 			if( $settings['overlap'] ){ // If Overlap
 				$carousel .= "</div>"; // End Image 
@@ -1096,22 +1096,37 @@ function featured_carousel_image_style($slide_num){
 	$img_width = 100;
 	
 	// TODO: Add Image Widths for Bottom, Top, Below and Above
+	// Should just be 100 I think
 
-	if( $settings['content_width'] != 100 and !$settings['overlap'] ){
+	if( /* $settings['content_width'] != 100 and */ !$settings['overlap'] and $settings['content_loc'] != 'top' and $settings['content_loc'] != 'bottom' and $settings['content_loc'] != 'above' and $settings['content_loc'] != 'below' ){
 		$img_width = 100 - $settings['content_width'];
 	}
-	if( $settings['content_height'] != 100 and !$settings['overlap'] ){
+	if( /* $settings['content_height'] != 100 and */ !$settings['overlap'] and $settings['content_loc'] != 'left' and $settings['content_loc'] != 'right' and $settings['content_loc'] != 'above' and $settings['content_loc'] != 'below'){
 		$img_height = 100 - $settings['content_height']; 
 	}
 	
 	// Add Image if Exists
 	$image_style = "style='".( $has_image ? "background-image:url($data[img]);" : "" );
 	
-	// Set Image Height and Width
+	// Set Image Container Height and Width
 	$image_style .= " height:".$img_height."%; width:".$img_width."%;";
 
-	// Crop Image if Specified
-	$image_style .= " background-size:".($data['crop'] ? "100% auto;" : "contain;");
+	// Get Image Size
+	$img_size = getimagesize( $data['img'] );
+
+	// Get Container Dimensions
+	$container_dim = array($settings['width']*$img_width/100, $settings['height']*$img_height/100);
+
+	// If Image is Smaller than container, Do not blow up
+	if( $container_dim[0] > $img_size[0] ){
+		$image_style .= "background-size: $img_size[0]px auto; background-repeat: no-repeat; background-position: center;";
+	}elseif( $container_dim[1] > $img_size[1] ){
+		$image_style .= "background-size: auto $img_size[1]px; background-repeat: no-repeat; background-position: center;";
+	}elseif( $data['crop'] ){ // Crop if Specified
+		$image_style .= "background-size:100% auto;";
+	}else{ // Fit Entire Image
+		$image_style .= "background-size: contain; background-repeat: no-repeat; background-position: center;";
+	}
 	
 	// Set Background Color
 	$image_style .= " background-color:#$settings[image_color];";
@@ -1125,13 +1140,13 @@ function featured_carousel_image_style($slide_num){
 		}elseif( $settings['content_loc'] == 'right' ){
 			$image_style .= " float:left;";
 		}elseif( $settings['content_loc'] == 'bottom'){
-			$content_style .= " position: absolute; top: 0%; ";
+			$image_style .= " position: absolute; top: 0%; ";
 		}elseif( $settings['content_loc'] == 'top'){
-
+			$image_style .= " position: absolute; bottom: 0%; ";
 		}elseif( $settings['content_loc'] == 'below'){
-
+			$image_style .= " position: absolute; top: 0%; ";
 		}elseif( $settings['content_loc'] == 'above'){
-
+			$image_style .= " position: absolute; top: 0%; ";
 		} 
 
 		// TODO: Add Content Location Bottom, Top, Below and Above
@@ -1170,10 +1185,13 @@ function featured_carousel_content_style($slide_num){
 	if( $settings['content_loc'] == 'left' or $settings['content_loc'] == 'right' ){
 		$width = $settings['content_width']."%";
 		$height = $settings['content_height']."%";
+	}elseif( $settings['content_loc'] == 'bottom' or $settings['content_loc'] == 'top' or $settings['content_loc'] == 'below' or $settings['content_loc'] == 'above' ){
+		$width = "100%";
+		$height = $settings['content_height']."%";
 	}	
 	
 	// Build Content Style from Settings
-	$content_style = "style='width:$width; height:$height; background-color:$bgcolor; color: #$settings[text_color]; padding: $settings[content_pad]px;";
+	$content_style = "style='overflow: hidden; box-sizing: border-box; width:$width; height:$height; background-color:$bgcolor; color: #$settings[text_color]; padding: $settings[content_pad]px;";
 	
 	// Make sure Controller doesn't cover Text
 	if( $settings['control_visible'] and strpos( $settings['control_loc'], 'content' ) !== false ){
@@ -1195,11 +1213,11 @@ function featured_carousel_content_style($slide_num){
 		}elseif( $settings['content_loc'] == 'bottom'){
 			$content_style .= " position: absolute; bottom: 0%; ";
 		}elseif( $settings['content_loc'] == 'top'){
-
+			$content_style .= " position: absolute; top: 0%; ";
 		}elseif( $settings['content_loc'] == 'below'){
-
+			$content_style .= " position: absolute; top: 100%;";
 		}elseif( $settings['content_loc'] == 'above'){
-
+			$content_style .= " position: absolute; bottom: 100%;";
 		} 
 		// TODO: Add Content Location of Below, Above, Bottom and Top
 	}
