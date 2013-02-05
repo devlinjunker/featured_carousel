@@ -1059,8 +1059,8 @@ function featured_carousel_display(){
 	// End Carousel
 	$carousel .= "</div>";
 	
-	// Display Carousel if Set
-	if( $settings['control_visible'] == true ){
+	// Display Controller if Set
+	if( $settings['control_visible'] == true and $settings['slide_count'] > 1 ){
 		// Get Controller Style
 		$controller_style = featured_carousel_controller_style();
 
