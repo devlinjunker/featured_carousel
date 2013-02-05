@@ -908,9 +908,9 @@ function sanitize_featured_carousel_settings($input){
 	
 	// Check if Controller is Visible or Not
 	if( $input['control_visible'] == $defaults['control_visible'] ){
-		$input['control_visible'] == $defaults['control_visible'];
+		$input['control_visible'] = $defaults['control_visible'];
 	}else{
-		$input['control_visible'] == !$defaults['control_visible'];
+		$input['control_visible'] = !$defaults['control_visible'];
 	}
 
 	// Check if Controller Location is Valid Value
